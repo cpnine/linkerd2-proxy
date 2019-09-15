@@ -78,8 +78,6 @@ where
             let backoff = config.outbound_connect_backoff.clone();
             move |_| Ok(backoff.stream())
         }))
-        .push(trace::request::layer())
-        .push(tracing_tower::request_span::layer(client::make_span("out")))
         .push(normalize_uri::layer());
 
     // A per-`outbound::Endpoint` stack that:
@@ -157,6 +155,8 @@ where
         .push(balance::layer(EWMA_DEFAULT_RTT, EWMA_DECAY));
 
     let distributor = endpoint_stack
+        .push(trace::request::layer())
+        .push(tracing_tower::request_span::layer(client::make_span("out")))
         .push(
             // Attempt to build a balancer. If the service is
             // unresolvable, fall back to using a router that dispatches
